@@ -13,9 +13,9 @@ to following a different dwarf. It can also switch to following animals,
 hostiles, or visiting units. You can switch to the next target (or a previous
 target) immediately with the left/right arrow keys.
 
-`spectate` will disengage and turn itself off when you move the map, just like
-the vanilla follow mechanic. It will also disengage immediately if you open the
-squads menu for military action.
+`spectate` will automatically disengage and turn itself off when you move the
+map, just like the vanilla follow mechanic. It will also disengage immediately
+if you open the squads menu for military action.
 
 It can also annotate your dwarves on the map with their name, job, and other
 information, either as floating tooltips or in a panel that comes up when you
@@ -36,8 +36,8 @@ Usage
     enable spectate
     spectate [status]
     spectate toggle
-    spectate set <setting> <value>
-    spectate overlay <name> enable|disable
+    spectate set <setting> <value> [<subvalue>]
+    spectate overlay enable|disable
 
 Examples
 --------
@@ -59,16 +59,17 @@ Examples
 ``spectate set follow-seconds 30``
     Configure `spectate` to switch targets every 30 seconds when in follow mode.
 
-``spectate overlay follow enable``
-    Show informative tooltips that follow each unit on the map.
+``spectate overlay enable``
+    Show informative tooltips that follow each unit on the map. Note that this
+    can be enabled independently of `spectate` itself.
+
+``spectate set tooltip-follow-job-shortenings "Store item in stockpile" "Store"``
+    Abbreviate the names of "Store item in stockpile" jobs to just "Store" when the
+    job is displayed in the `spectate` tooltips. See the
+    ``tooltip-follow-job-shortenings`` setting below for details.
 
 Settings
 --------
-
-``auto-disengage`` (default: enabled)
-    Toggle automatically disabling the plugin when the player moves the map or
-    opens the squad panel. If this is disabled, you will need to manually
-    disable the plugin to turn off follow mode.
 
 ``auto-unpause`` (default: disabled)
     Toggle auto-dismissal of announcements that pause the game, like sieges,
@@ -82,7 +83,7 @@ Settings
     include time that the game is paused.
 
 ``include-animals`` (default: disabled)
-    Toggle whether to sometimes follow fort animals.
+    Toggle whether to sometimes follow fort animals and wildlife.
 
 ``include-hostiles`` (default: disabled)
     Toggle whether to sometimes follow hostiles (eg. undead, titans, invaders,
@@ -101,48 +102,122 @@ Settings
     Toggle whether to prefer following (non-siege) units that have newly
     arrived on the map.
 
+``tooltip-follow`` (default: enabled)
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
+    tooltips that follow onscreen dwarves around the map.
+
+``tooltip-follow-blink-milliseconds`` (default: 3000)
+    If the ``spectate.tooltip`` overlay is enabled, set the tooltip's blink
+    duration in milliseconds. Set to 0 to always show.
+
 ``tooltip-follow-job`` (default: enabled)
-    If the ``spectate.follow`` overlay is enabled, toggle whether to show the
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
     job of the dwarf in the tooltip.
 
+``tooltip-follow-job-shortenings`` (default: "Store item in stockpile" -> "Store item")
+    If the ``spectate.tooltip`` overlay is enabled, this dictionary is used to
+    shorten some job names, f.e. "Store item in stockpile" becomes "Store item".
+    You can pass two parameters to ``spectate set tooltip-follow-job-shortenings`` to
+    add or change elements in the dictionary. See the Examples section for an example.
+
 ``tooltip-follow-name`` (default: enabled)
-    If the ``spectate.follow`` overlay is enabled, toggle whether to show the
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
     name of the dwarf in the tooltip.
 
 ``tooltip-follow-stress`` (default: enabled)
-    If the ``spectate.follow`` overlay is enabled, toggle whether to show the
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
     happiness level (stress) of the dwarf in the tooltip.
 
+``tooltip-follow-stress-levels`` (default: Displeased, Content, Pleased are disabled)
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
+    specific happiness level (stress) of the dwarf in the tooltip. F.e.
+    ``tooltip-follow-stress-levels 2 true`` would show the Displeased emoticon.
+    See ``tooltip-stress-levels`` below for details.
+
+``tooltip-hover`` (default: enabled)
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
+    hover popup panel when your mouse cursor is over a unit.
+
 ``tooltip-hover-job`` (default: enabled)
-    If the ``spectate.follow`` overlay is enabled, toggle whether to show the
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
     job of the dwarf in the hover panel.
 
 ``tooltip-hover-name`` (default: enabled)
-    If the ``spectate.follow`` overlay is enabled, toggle whether to show the
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
     name of the dwarf in the hover panel.
 
 ``tooltip-hover-stress`` (default: enabled)
-    If the ``spectate.follow`` overlay is enabled, toggle whether to show the
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
     happiness level (stress) of the dwarf in the hover panel.
+
+``tooltip-hover-stress-levels`` (default: Displeased, Content, Pleased are disabled)
+    If the ``spectate.tooltip`` overlay is enabled, toggle whether to show the
+    specific happiness level (stress) of the dwarf in the hover panel. F.e.
+    ``tooltip-hover-stress-levels 2 true`` would show the Displeased emoticon.
+    See ``tooltip-stress-levels`` below for details.
+
+``tooltip-stress-levels``
+    Controls how happiness levels (stress) are displayed (emoticon and color).
+    F.e. ``tooltip-stress-levels 6 text XD`` will change the emoticon for
+    Ecstatic dwarves to ``XD``.
+    Default values are:
+
+.. list-table::
+   :widths: 25 25 25 25
+   :header-rows: 1
+
+   * - Level
+     - name
+     - text
+     - pen
+   * - 0
+     - Miserable
+     - ``=C``
+     - COLOR_RED
+   * - 1
+     - Unhappy
+     - ``:C``
+     - COLOR_LIGHTRED
+   * - 2
+     - Displeased
+     - ``:(``
+     - COLOR_YELLOW
+   * - 3
+     - Content
+     - ``:]``
+     - COLOR_GREY
+   * - 4
+     - Pleased
+     - ``:)``
+     - COLOR_GREEN
+   * - 5
+     - Happy
+     - ``:D``
+     - COLOR_LIGHTGREEN
+   * - 6
+     - Ecstatic
+     - ``=D``
+     - COLOR_LIGHTCYAN
+
+Keep in mind that the text may look different when rendered in the game's font.
 
 Overlays
 --------
 
-``spectate`` provides two overlays via the `overlay` framework to add
-information and functionality to the main map. These overlays can be controlled
-via the ``spectate overlay`` command or the ``Overlays`` tab in
-`gui/control-panel`.
+``spectate.tooltip``
 
-The information displayed by these overlays can be configured via the
-``spectate set`` command or the `gui/spectate` interface.
+``spectate`` can show informative tooltips that follow each unit on the map
+and/or a popup panel with information when your mouse cursor hovers over a unit.
 
-``spectate.follow``
-    Show informative tooltips that follow each unit on the map. You can enable
-    this overlay by running ``spectate overlay follow enable`` or,
-    equivalently, ``overlay enable spectate.follow``.
+This overlay is managed via the `overlay` framework. It can be controlled via
+the ``spectate overlay`` command or the ``Overlays`` tab in `gui/control-panel`.
 
-``spectate.hover``
-    Show a popup panel with selected information when your mouse cursor hovers
-    over a unit. You can enable this overlay by running
-    ``spectate overlay hover enable`` or, equivalently,
-    ``overlay enable spectate.hover``.
+``spectate.followpanel``
+
+This overlay adds widgets to the vanilla follow panel -- the one that appears
+in the lower left corner of the screen when you are following a unit. When you
+are following a unit, regardless of whether the `spectate` plugin is enabled,
+you can use the keyboard cursor left/right keys to switch which unit you are
+following. There is also an indicator for whether spectate mode is enabled
+(that is, whether the `spectate` plugin is enabled), and there is a button for
+launching the `gui/spectate` configuration UI.
