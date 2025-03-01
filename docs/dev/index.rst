@@ -16,6 +16,7 @@ These are pages relevant to people developing for DFHack.
    /docs/api/index
    /docs/dev/Lua API
    /docs/dev/overlay-dev-guide
+   /docs/dev/Stonesense-dev-manual
    /docs/dev/Structures-intro
    /docs/dev/data-identity
    /docs/dev/Memory-research
