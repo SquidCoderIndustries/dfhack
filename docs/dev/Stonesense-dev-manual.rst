@@ -88,7 +88,7 @@ Text Wrapping Mode
 
 The ``WrapMode`` enum defines different behaviors for text when it exceeds the maximum width (``maxWidth``):
 
-* ``MODE_TRUNCATE``: When the text exceeds ``maxWidth``, it is truncated, and a period (".") is appended to
-indicate truncation. No further wrapping is performed.
-* ``MODE_WRAP``: The text wraps to the next line when it exceeds ``maxWidth``.
 * ``MODE_NONE``: No wrapping or truncation is performed. The text is rendered as a single line.
+* ``MODE_WRAP``: The text wraps to the next line when it exceeds ``maxWidth``.
+* ``MODE_TRUNCATE``: When the text exceeds ``maxWidth``, it is truncated, and a period (".") is appended to
+  indicate truncation. No further wrapping is performed.
