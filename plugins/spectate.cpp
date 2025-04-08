@@ -461,7 +461,7 @@ static void get_dwarf_buckets(color_ostream &out,
                 citizen_combat_units.push_back(unit);
             else
                 other_combat_units.push_back(unit);
-        } else if (config.prefer_nicknamed && !unit->name.nickname.empty()) {
+        } else if (!unit->name.nickname.empty()) {
             nicknamed_units.push_back(unit);
         } else if (unit->job.current_job && !boring_jobs.contains(unit->job.current_job->job_type)) {
             job_units.push_back(unit);
