@@ -622,7 +622,7 @@ TitleVersionOverlay.ATTRS{
 
 function TitleVersionOverlay:init()
     local text = {}
-    table.insert(text, 'DFHack ' .. dfhack.getDFHackVersion() ..
+    table.insert(text, 'SquidHack ' .. dfhack.getDFHackVersion() ..
             (dfhack.isRelease() and '' or (' (git: %s)'):format(dfhack.getGitCommit(true))))
     if #dfhack.getDFHackBuildID() > 0 then
         table.insert(text, NEWLINE)
@@ -631,6 +631,10 @@ function TitleVersionOverlay:init()
     if dfhack.isPrerelease() then
         table.insert(text, NEWLINE)
         table.insert(text, {text='Pre-release build', pen=COLOR_LIGHTRED})
+    end
+    if #dfhack.getSquidhackInfo() > 0 then
+        table.insert(text, NEWLINE)
+        table.insert(text, {text=dfhack.getSquidhackInfo(), pen=COLOR_LIGHTGREEN})
     end
 
     for _,t in ipairs(text) do

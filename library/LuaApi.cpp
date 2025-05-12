@@ -1403,6 +1403,7 @@ static const LuaWrapper::FunctionReg dfhack_module[] = {
     WRAP_VERSION_FUNC(gitXmlMatch, git_xml_match),
     WRAP_VERSION_FUNC(isRelease, is_release),
     WRAP_VERSION_FUNC(isPrerelease, is_prerelease),
+    WRAP_VERSION_FUNC(getSquidhackInfo, get_squidhack_info),
     WRAP(addCommandToHistory),
     { NULL, NULL }
 };

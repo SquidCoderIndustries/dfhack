@@ -8,6 +8,8 @@ namespace DFHack {
         const char *dfhack_run_url();
         int dfhack_abi_version();
 
+        const char *get_squidhack_info();
+
         const char *git_description();
         const char* git_commit(bool short_hash = false);
         const char *git_xml_commit();
@@ -26,6 +28,8 @@ namespace DFHack {
     #define DFHACK_BUILD_ID (DFHack::Version::dfhack_build_id())
     #define DFHACK_RUN_URL (DFHack::Version::dfhack_run_url())
     #define DFHACK_ABI_VERSION (DFHack::Version::dfhack_abi_version())
+
+    #define SQUIDHACK_INFO (DFHack::Version::get_squidhack_info())
 
     #define DFHACK_GIT_DESCRIPTION (DFHack::Version::git_description())
     #define DFHACK_GIT_COMMIT (DFHack::Version::git_commit())

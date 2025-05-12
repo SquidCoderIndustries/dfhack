@@ -35,7 +35,7 @@ function HotspotMenuWidget:init()
         widgets.Label{
             text=widgets.makeButtonLabelText{
                 chars={
-                    {VERT_BAR, 'D', 'F', VERT_BAR},
+                    {VERT_BAR, 'S', 'C', VERT_BAR},
                     {VERT_BAR, 'H', 'a', VERT_BAR},
                     {VERT_BAR, 'c', 'k', VERT_BAR},
                 },

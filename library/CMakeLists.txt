@@ -342,6 +342,12 @@ set_property(TARGET dfhack-version APPEND PROPERTY COMPILE_DEFINITIONS
     DFHACK_ABI_VERSION=${DFHACK_ABI_VERSION}
     DFHACK_RUN_URL="${DFHACK_RUN_URL}"
 )
+if(NOT(${SQUIDHACK_INFO} STREQUAL ""))
+    set_property(TARGET dfhack-version APPEND PROPERTY COMPILE_DEFINITIONS
+        SQUIDHACK_INFO="${SQUIDHACK_INFO}"
+    )
+endif()
+
 target_include_directories(dfhack-version PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 if(DFHACK_PRERELEASE)
     set_property(TARGET dfhack-version APPEND PROPERTY COMPILE_DEFINITIONS

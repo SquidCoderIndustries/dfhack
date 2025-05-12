@@ -73,5 +73,14 @@ namespace DFHack {
             return false;
         #endif
         }
+        const char *get_squidhack_info()
+        {
+        #ifdef SQUIDHACK_INFO
+            return SQUIDHACK_INFO;
+        #else
+            return "";
+        #endif
+        }
+
     }
 }
