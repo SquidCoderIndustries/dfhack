@@ -31,6 +31,7 @@
 #include "df/manager_order.h"
 #include "df/manager_order_condition_item.h"
 #include "df/manager_order_condition_order.h"
+#include "df/manager_order_template.h"
 #include "df/reaction.h"
 #include "df/reaction_reagent.h"
 #include "df/world.h"
@@ -71,6 +72,11 @@ static command_result orders_sort_command(color_ostream & out);
 static command_result orders_recheck_command(color_ostream & out);
 static command_result orders_recheck_current_command(color_ostream & out);
 
+static Json::Value orders_jsonify(color_ostream& out, df::manager_order* it, Json::Value & order);
+static std::string json_string(Json::Value json);
+static void fillFromTemplate(df::manager_order& order, df::manager_order_template* orderTemplate);
+static df::workquota_frequency_type strToFreq(std::string frequency);
+
 static command_result orders_command(color_ostream & out, std::vector<std::string> & parameters)
 {
     class color_ostream_resetter
@@ -94,6 +100,29 @@ static command_result orders_command(color_ostream & out, std::vector<std::strin
 
     if (!Core::getInstance().isMapLoaded() || !World::isFortressMode()) {
         out.printerr("Cannot run %s without a loaded fort.\n", plugin_name);
+        return CR_FAILURE;
+    }
+    //Internal function to make json string for 'workorder' command
+    //orders _create <template_compare_string> <amount> <frequency>
+    if (parameters[0] == "_create" && parameters.size() == 4)
+    {
+        Json::Value order(Json::objectValue);
+        std::vector<df::manager_order_template* > templateList;
+        templateList = df::global::game->main_interface.create_work_order.jminfo_master;
+        if (templateList.size() == 0) { return CR_FAILURE; }
+        for (auto it : templateList) {
+            if (it->compare_str == parameters[1]) {
+                df::manager_order* manager_order = new df::manager_order();
+                fillFromTemplate(*manager_order, it);
+                manager_order->frequency = strToFreq(parameters[3]);
+                manager_order->amount_total = string_to_int(parameters[2], 10);
+                manager_order->amount_left = manager_order->amount_total;
+                orders_jsonify(out, manager_order, order);
+                auto jstr = json_string(order);
+                out << jstr << std::endl;
+                return CR_OK;
+            }
+        }
         return CR_FAILURE;
     }
 
@@ -304,6 +333,30 @@ static df::itemdef *get_itemdef(color_ostream & out, df::item_type type, ST subt
     }
 }
 
+static void fillFromTemplate(df::manager_order& order, df::manager_order_template* orderTemplate)
+{
+    order.job_type = orderTemplate->job_type;
+    order.reaction_name = orderTemplate->reaction_name;
+    order.mat_type = orderTemplate->mat_type;
+    order.mat_index = orderTemplate->mat_index;
+    order.material_category = orderTemplate->material_category;
+    order.item_type = orderTemplate->item_type;
+    order.item_subtype = orderTemplate->item_subtype;
+    order.specflag = orderTemplate->specflag;
+    order.specdata = orderTemplate->specdata;
+}
+
+static df::workquota_frequency_type strToFreq(std::string frequency)
+{
+    using df::workquota_frequency_type;
+    return
+        (frequency == "Daily") ? workquota_frequency_type:: Daily :
+        (frequency == "Monthly") ? workquota_frequency_type:: Monthly :
+        (frequency == "Seaonally") ? workquota_frequency_type::Seasonally :
+        (frequency == "Yearly") ? workquota_frequency_type::Yearly :
+        workquota_frequency_type::OneTime;
+}
+
 static command_result orders_export_command(color_ostream & out, const std::string & name)
 {
     if (!is_safe_filename(out, name))
@@ -316,191 +369,8 @@ static command_result orders_export_command(color_ostream & out, const std::stri
     for (auto it : world->manager_orders.all)
     {
         Json::Value order(Json::objectValue);
-
-        order["id"] = it->id;
-        order["job"] = enum_item_key(it->job_type);
-        if (!it->reaction_name.empty())
-        {
-            order["reaction"] = it->reaction_name;
-        }
-
-        if (it->item_type != item_type::NONE)
-        {
-            order["item_type"] = enum_item_key(it->item_type);
-        }
-        if (it->item_subtype != -1)
-        {
-            df::itemdef *def = get_itemdef(out, it->item_type == item_type::NONE ? ENUM_ATTR(job_type, item, it->job_type) : it->item_type, it->item_subtype);
-
-            if (def)
-            {
-                order["item_subtype"] = def->id;
-            }
-        }
-
-        if (it->job_type == job_type::PrepareMeal)
-        {
-            order["meal_ingredients"] = it->mat_type;
-        }
-        else if (it->mat_type != -1 || it->mat_index != -1)
-        {
-            order["material"] = MaterialInfo(it).getToken();
-        }
-
-        if (it->specflag.encrust_flags.whole != 0)
-        {
-            bitfield_to_json_array(order["item_category"], it->specflag.encrust_flags);
-        }
-
-        if (it->specdata.hist_figure_id != -1)
-        {
-            order["hist_figure"] = it->specdata.hist_figure_id;
-        }
-
-        if (it->material_category.whole != 0)
-        {
-            bitfield_to_json_array(order["material_category"], it->material_category);
-        }
-
-        if (it->art_spec.type != df::job_art_specifier_type::None)
-        {
-            Json::Value art(Json::objectValue);
-
-            art["type"] = enum_item_key(it->art_spec.type);
-            art["id"] = it->art_spec.id;
-            if (it->art_spec.subid != -1)
-            {
-                art["subid"] = it->art_spec.subid;
-            }
-
-            order["art"] = art;
-        }
-
-        order["amount_left"] = it->amount_left;
-        order["amount_total"] = it->amount_total;
-        order["is_validated"] = bool(it->status.bits.validated);
-        order["is_active"] = bool(it->status.bits.active);
-
-        order["frequency"] = enum_item_key(it->frequency);
-
-        // TODO: finished_year, finished_year_tick
-
-        if (it->workshop_id != -1)
-        {
-            order["workshop_id"] = it->workshop_id;
-        }
-
-        if (it->max_workshops != 0)
-        {
-            order["max_workshops"] = it->max_workshops;
-        }
-
-        if (!it->item_conditions.empty())
-        {
-            Json::Value conditions(Json::arrayValue);
-
-            for (auto it2 : it->item_conditions)
-            {
-                Json::Value condition(Json::objectValue);
-
-                condition["condition"] = enum_item_key(it2->compare_type);
-                condition["value"] = it2->compare_val;
-
-                if (it2->flags1.whole != 0 || it2->flags2.whole != 0 || it2->flags3.whole != 0)
-                {
-                    bitfield_to_json_array(condition["flags"], it2->flags1);
-                    bitfield_to_json_array(condition["flags"], it2->flags2);
-                    bitfield_to_json_array(condition["flags"], it2->flags3);
-                    // TODO: flags4, flags5
-                }
-
-                if (it2->item_type != item_type::NONE)
-                {
-                    condition["item_type"] = enum_item_key(it2->item_type);
-                }
-                if (it2->item_subtype != -1)
-                {
-                    df::itemdef *def = get_itemdef(out, it2->item_type, it2->item_subtype);
-
-                    if (def)
-                    {
-                        condition["item_subtype"] = def->id;
-                    }
-                }
-
-                if (it2->mat_type != -1 || it2->mat_index != -1)
-                {
-                    condition["material"] = MaterialInfo(it2).getToken();
-                }
-
-                if (it2->metal_ore != -1)
-                {
-                    condition["bearing"] = df::inorganic_raw::find(it2->metal_ore)->id;
-                }
-
-                if (!it2->reaction_class.empty())
-                {
-                    condition["reaction_class"] = it2->reaction_class;
-                }
-
-                if (!it2->has_material_reaction_product.empty())
-                {
-                    condition["reaction_product"] = it2->has_material_reaction_product;
-                }
-
-                if (it2->has_tool_use != tool_uses::NONE)
-                {
-                    condition["tool"] = enum_item_key(it2->has_tool_use);
-                }
-
-                if (it2->min_dimension != -1)
-                {
-                    condition["min_dimension"] = it2->min_dimension;
-                }
-
-                if (it2->reaction_id != -1)
-                {
-                    df::reaction *reaction = world->raws.reactions.reactions[it2->reaction_id];
-                    condition["reaction_id"] = reaction->code;
-
-                    if (!it2->contains.empty())
-                    {
-                        Json::Value contains(Json::arrayValue);
-                        for (int32_t contains_val : it2->contains)
-                        {
-                            contains.append(reaction->reagents[contains_val]->code);
-                        }
-                        condition["contains"] = contains;
-                    }
-                }
-
-                conditions.append(condition);
-            }
-
-            order["item_conditions"] = conditions;
-        }
-
-        if (!it->order_conditions.empty())
-        {
-            Json::Value conditions(Json::arrayValue);
-
-            for (auto it2 : it->order_conditions)
-            {
-                Json::Value condition(Json::objectValue);
-
-                condition["order"] = it2->order_id;
-                condition["condition"] = enum_item_key(it2->condition);
-
-                // TODO: unk_1
-
-                conditions.append(condition);
-            }
-
-            order["order_conditions"] = conditions;
-        }
-
-        // TODO: items
-
+        orders_jsonify(out, it, order);
+        out << json_string(order) << std::endl;
         orders.append(order);
     }
 
@@ -511,6 +381,216 @@ static command_result orders_export_command(color_ostream & out, const std::stri
     file << orders << std::endl;
 
     return file.good() ? CR_OK : CR_FAILURE;
+}
+
+// Escapes a string to be Lua-compatible
+static std::string escapeForLua(const std::string& input) {
+    std::ostringstream escaped;
+    for (char c : input) {
+        switch (c) {
+        case '\"': escaped << "\\\""; break;
+        case '\\': escaped << "\\\\"; break;
+        case '\n':
+        case '\t':
+        case '\r': escaped << ""; break;
+        default: escaped << c;
+        }
+    }
+    return escaped.str();
+}
+
+static std::string json_string(Json::Value json)
+{
+    std::string jstr = "\"" + escapeForLua(json.toStyledString()) + "\"";
+    return jstr;
+}
+
+static Json::Value orders_jsonify(color_ostream & out, df::manager_order* it, Json::Value & order)
+{
+    order["id"] = it->id;
+    order["job"] = enum_item_key(it->job_type);
+    if (!it->reaction_name.empty())
+    {
+        order["reaction"] = it->reaction_name;
+    }
+
+    if (it->item_type != item_type::NONE)
+    {
+        order["item_type"] = enum_item_key(it->item_type);
+    }
+    if (it->item_subtype != -1)
+    {
+        df::itemdef *def = get_itemdef(out, it->item_type == item_type::NONE ? ENUM_ATTR(job_type, item, it->job_type) : it->item_type, it->item_subtype);
+
+        if (def)
+        {
+            order["item_subtype"] = def->id;
+        }
+    }
+
+    if (it->job_type == job_type::PrepareMeal)
+    {
+        order["meal_ingredients"] = it->mat_type;
+    }
+    else if (it->mat_type != -1 || it->mat_index != -1)
+    {
+        order["material"] = MaterialInfo(it).getToken();
+    }
+
+    if (it->specflag.encrust_flags.whole != 0)
+    {
+        bitfield_to_json_array(order["item_category"], it->specflag.encrust_flags);
+    }
+
+    if (it->specdata.hist_figure_id != -1)
+    {
+        order["hist_figure"] = it->specdata.hist_figure_id;
+    }
+
+    if (it->material_category.whole != 0)
+    {
+        bitfield_to_json_array(order["material_category"], it->material_category);
+    }
+
+    if (it->art_spec.type != df::job_art_specifier_type::None)
+    {
+        Json::Value art(Json::objectValue);
+
+        art["type"] = enum_item_key(it->art_spec.type);
+        art["id"] = it->art_spec.id;
+        if (it->art_spec.subid != -1)
+        {
+            art["subid"] = it->art_spec.subid;
+        }
+
+        order["art"] = art;
+    }
+
+    order["amount_left"] = it->amount_left;
+    order["amount_total"] = it->amount_total;
+    order["is_validated"] = bool(it->status.bits.validated);
+    order["is_active"] = bool(it->status.bits.active);
+
+    order["frequency"] = enum_item_key(it->frequency);
+
+    // TODO: finished_year, finished_year_tick
+
+    if (it->workshop_id != -1)
+    {
+        order["workshop_id"] = it->workshop_id;
+    }
+
+    if (it->max_workshops != 0)
+    {
+        order["max_workshops"] = it->max_workshops;
+    }
+
+    if (!it->item_conditions.empty())
+    {
+        Json::Value conditions(Json::arrayValue);
+
+        for (auto it2 : it->item_conditions)
+        {
+            Json::Value condition(Json::objectValue);
+
+            condition["condition"] = enum_item_key(it2->compare_type);
+            condition["value"] = it2->compare_val;
+
+            if (it2->flags1.whole != 0 || it2->flags2.whole != 0 || it2->flags3.whole != 0)
+            {
+                bitfield_to_json_array(condition["flags"], it2->flags1);
+                bitfield_to_json_array(condition["flags"], it2->flags2);
+                bitfield_to_json_array(condition["flags"], it2->flags3);
+                // TODO: flags4, flags5
+            }
+
+            if (it2->item_type != item_type::NONE)
+            {
+                condition["item_type"] = enum_item_key(it2->item_type);
+            }
+            if (it2->item_subtype != -1)
+            {
+                df::itemdef *def = get_itemdef(out, it2->item_type, it2->item_subtype);
+
+                if (def)
+                {
+                    condition["item_subtype"] = def->id;
+                }
+            }
+
+            if (it2->mat_type != -1 || it2->mat_index != -1)
+            {
+                condition["material"] = MaterialInfo(it2).getToken();
+            }
+
+            if (it2->metal_ore != -1)
+            {
+                condition["bearing"] = df::inorganic_raw::find(it2->metal_ore)->id;
+            }
+
+            if (!it2->reaction_class.empty())
+            {
+                condition["reaction_class"] = it2->reaction_class;
+            }
+
+            if (!it2->has_material_reaction_product.empty())
+            {
+                condition["reaction_product"] = it2->has_material_reaction_product;
+            }
+
+            if (it2->has_tool_use != tool_uses::NONE)
+            {
+                condition["tool"] = enum_item_key(it2->has_tool_use);
+            }
+
+            if (it2->min_dimension != -1)
+            {
+                condition["min_dimension"] = it2->min_dimension;
+            }
+
+            if (it2->reaction_id != -1)
+            {
+                df::reaction *reaction = world->raws.reactions.reactions[it2->reaction_id];
+                condition["reaction_id"] = reaction->code;
+
+                if (!it2->contains.empty())
+                {
+                    Json::Value contains(Json::arrayValue);
+                    for (int32_t contains_val : it2->contains)
+                    {
+                        contains.append(reaction->reagents[contains_val]->code);
+                    }
+                    condition["contains"] = contains;
+                }
+            }
+
+            conditions.append(condition);
+        }
+
+        order["item_conditions"] = conditions;
+    }
+
+    if (!it->order_conditions.empty())
+    {
+        Json::Value conditions(Json::arrayValue);
+
+        for (auto it2 : it->order_conditions)
+        {
+            Json::Value condition(Json::objectValue);
+
+            condition["order"] = it2->order_id;
+            condition["condition"] = enum_item_key(it2->condition);
+
+            // TODO: unk_1
+
+            conditions.append(condition);
+        }
+
+        order["order_conditions"] = conditions;
+    }
+
+    // TODO: items
+    return order;
 }
 
 static command_result orders_import(color_ostream &out, Json::Value &orders)
