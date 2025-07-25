@@ -56,6 +56,27 @@ Template for new versions:
 ## New Features
 
 ## Fixes
+- several fixes related to changes in file system handling in DF 52.01
+
+## Misc Improvements
+- `autoclothing`: added a ``clear`` option to unset previously set orders
+
+## Documentation
+
+## API
+
+## Lua
+
+## Removed
+
+# 52.02-r1
+
+## New Tools
+
+## New Features
+
+## Fixes
+- Honor the "portable mode" preference setting for locating save folders. Fixes DFHack cosaves not working in most cases.
 
 ## Misc Improvements
 
