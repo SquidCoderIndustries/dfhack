@@ -35,7 +35,6 @@ Template for new versions:
 ## Documentation
 
 ## API
-- Added GUI focus strings for new_arena: ``/Loading`` and ``/Mods``
 
 ## Lua
 
@@ -57,6 +56,44 @@ Template for new versions:
 ## New Features
 
 ## Fixes
+
+## Misc Improvements
+
+## Documentation
+
+## API
+
+## Lua
+
+## Removed
+
+# 52.03-r1.1
+
+## New Tools
+
+## New Features
+
+## Fixes
+- job descriptions of mix dye job will display proper dye names
+
+## Misc Improvements
+
+## Documentation
+
+## API
+
+## Lua
+
+## Removed
+
+# 52.03-r1
+
+## New Tools
+
+## New Features
+
+## Fixes
+- `preserve-rooms` will no longer hang on startup in the presence of a cycle in the replacement relationship of noble positions
 
 ## Misc Improvements
 
