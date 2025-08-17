@@ -55,15 +55,22 @@ Template for new versions:
 
 ## New Features
 
+- `nestboxes`: allow limiting egg protection to nestboxes inside a designated burrow
+
 ## Fixes
+- ``Units::getReadableName`` will no longer append a comma to the names of histfigs with no profession
 
 ## Misc Improvements
 
 ## Documentation
 
 ## API
+- ``Job``: new functions ``createLinked`` and ``assignToWorkshop``
+- ``Units``: new functions ``getFocusPenalty``, ``unbailableSocialActivity``, ``isJobAvailable``
 
 ## Lua
+
+- New functions: ``dfhack.jobs.createLinked``, ``dfhack.jobs.assignToWorkshop``, ``dfhack.units.getFocusPenalty``, ``dfhack.units.unbailableSocialActivity``, and ``dfhack.units.isJobAvailable``
 
 ## Removed
 
@@ -100,6 +107,7 @@ Template for new versions:
 ## Documentation
 
 ## API
+- Adjusted the logic inside ``Military::removeFromSquad`` to more closely match the game's own behavior
 
 ## Lua
 
@@ -165,6 +173,7 @@ Template for new versions:
 ## API
 
 ## Lua
+- ``widgets.Slider``: new mouse-controlled single-headed slider widget
 
 ## Removed
 
