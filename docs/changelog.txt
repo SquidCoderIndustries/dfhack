@@ -67,6 +67,25 @@ Template for new versions:
 
 ## Removed
 
+# 52.04-r1
+
+## New Tools
+
+## New Features
+- Compatibility with DF 52.04
+
+## Fixes
+
+## Misc Improvements
+
+## Documentation
+
+## API
+
+## Lua
+
+## Removed
+
 # 52.03-r2
 
 ## New Tools
